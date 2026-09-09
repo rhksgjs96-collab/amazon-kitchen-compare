@@ -1,0 +1,90 @@
+// Amazon 상품 비교 사이트 — 데이터 모델
+// 정책 참고: 상품 정보/가격/재고는 갱신될 때마다 기존 값 위에 덮어씁니다(overwrite).
+// 과거 스냅샷을 별도로 쌓아두지 않으므로 "최대 24시간까지만 저장" 정책을 자연스럽게 만족합니다.
+// (RefreshLog는 원본 상품 데이터가 아니라 실행 요약/오류 메시지만 저장합니다.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  comparisonPages ComparisonPage[]
+
+  @@index([order])
+}
+
+model ComparisonPage {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryId String
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products   Product[]
+
+  @@index([categoryId])
+  @@index([order])
+}
+
+model Product {
+  id     String @id @default(cuid())
+  asin   String
+  order  Int    @default(0)
+  active Boolean @default(true)
+
+  // Amazon Creators API 응답으로 채워지는 필드 (수동 입력 금지 — 자동 갱신 전까지는 비어 있음)
+  title        String?
+  imageUrl     String?
+  features     Json? // string[] — 핵심 사양/특징
+  priceAmount  Float?
+  priceDisplay String?
+  currency     String?
+  availability String?
+  // Amazon Creators API 응답에 포함된, 파트너 태그가 확인된 링크만 저장합니다.
+  // 태그가 없거나 검증에 실패하면 null로 두고 구매 버튼을 숨깁니다.
+  affiliateUrl String?
+
+  lastFetchedAt DateTime?
+  lastError     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comparisonPageId String
+  comparisonPage   ComparisonPage @relation(fields: [comparisonPageId], references: [id], onDelete: Cascade)
+
+  @@unique([comparisonPageId, asin])
+  @@index([active])
+  @@index([comparisonPageId])
+}
+
+// 자동 갱신 실행 이력. 원본 상품 데이터는 저장하지 않고 요약 통계/오류 메시지만 남깁니다.
+model RefreshLog {
+  id             String   @id @default(cuid())
+  ranAt          DateTime @default(now())
+  success        Boolean
+  itemsRequested Int
+  itemsSucceeded Int
+  itemsFailed    Int
+  errorSummary   String?
+
+  @@index([ranAt])
+}
