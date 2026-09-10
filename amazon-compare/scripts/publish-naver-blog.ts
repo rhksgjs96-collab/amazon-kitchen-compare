@@ -16,6 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { buildBlogPost } from "@/lib/naver-blog/post-builder";
 import { listPublishableSlugs, loadBlogSource } from "@/lib/naver-blog/source";
 import { createLoginSession, publishToNaverBlog } from "@/lib/naver-blog/publisher";
+import { askToPublish, formatConfirmationSummary } from "@/lib/naver-blog/confirm";
 import type { BlogPostDraft } from "@/lib/naver-blog/types";
 
 interface CliOptions {
@@ -26,6 +27,7 @@ interface CliOptions {
   headed: boolean;
   force: boolean;
   login: boolean;
+  assumeYes: boolean;
   help: boolean;
   outDir: string;
   delayMs: number;
@@ -42,6 +44,7 @@ const USAGE = `
   --draft         발행하지 않고 네이버에 임시저장만 합니다.
   --headed        브라우저 창을 띄운 채로 실행합니다(무슨 일이 벌어지는지 볼 때).
   --force         내용이 지난번과 같아도 다시 발행합니다.
+  --yes, -y       발행 전 확인을 묻지 않습니다 (기본은 매번 물어봅니다).
   --login         창을 띄워 직접 로그인하고 세션만 저장한 뒤 끝냅니다.
   --out=<dir>     --dry-run 결과를 저장할 폴더 (기본: .naver-blog/preview)
   --delay=<초>    글과 글 사이 대기 시간 (기본: 90초)
@@ -57,6 +60,7 @@ function parseArgs(argv: string[]): CliOptions {
     headed: false,
     force: false,
     login: false,
+    assumeYes: false,
     help: false,
     outDir: ".naver-blog/preview",
     delayMs: 90_000,
@@ -69,6 +73,7 @@ function parseArgs(argv: string[]): CliOptions {
     else if (arg === "--headed") options.headed = true;
     else if (arg === "--force") options.force = true;
     else if (arg === "--login") options.login = true;
+    else if (arg === "--yes" || arg === "-y") options.assumeYes = true;
     else if (arg === "--help" || arg === "-h") options.help = true;
     else if (arg.startsWith("--slug=")) options.slugs.push(arg.slice("--slug=".length));
     else if (arg.startsWith("--out=")) options.outDir = arg.slice("--out=".length);
@@ -178,6 +183,24 @@ async function main(): Promise<void> {
     if (!options.force && (await alreadyPublished(loaded.comparisonPageId, draft.contentHash))) {
       console.log("  · 지난번과 내용이 같아 건너뜁니다. 다시 올리려면 --force를 쓰세요.");
       continue;
+    }
+
+    // 실제 발행은 되돌리기 번거로우므로 매번 사람에게 확인받습니다.
+    // (--draft는 남에게 보이지 않는 임시저장이라 묻지 않습니다.)
+    if (!options.draft && !options.assumeYes) {
+      const outcome = await askToPublish(formatConfirmationSummary(slug, draft));
+      if (outcome === "no-tty") {
+        console.error(
+          "  · 확인을 받을 터미널이 없어 발행하지 않았습니다. " +
+            "사람 없이 돌리시려면 --yes를 명시하거나, --draft로 임시저장만 하세요."
+        );
+        failures += 1;
+        continue;
+      }
+      if (outcome === "declined") {
+        console.log("  · 발행하지 않고 넘어갑니다.");
+        continue;
+      }
     }
 
     try {
