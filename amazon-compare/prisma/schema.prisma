@@ -39,6 +39,7 @@ model ComparisonPage {
   categoryId String
   category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products   Product[]
+  naverPosts NaverBlogPost[]
 
   @@index([categoryId])
   @@index([order])
@@ -87,4 +88,27 @@ model RefreshLog {
   errorSummary   String?
 
   @@index([ranAt])
+}
+
+// 네이버 블로그 발행 이력.
+// 같은 내용을 두 번 올리지 않기 위한 기록입니다. 상품 원본 데이터(가격/재고)는 저장하지 않고,
+// 제목·발행 결과·본문 해시만 남깁니다(24시간 보관 정책과 무관하도록).
+model NaverBlogPost {
+  id String @id @default(cuid())
+
+  // "PUBLISHED"(발행 완료) | "DRAFT"(임시저장) | "FAILED"(실패)
+  status      String
+  postTitle   String
+  postUrl     String?
+  // 제목+본문의 SHA-256. 같은 해시가 이미 PUBLISHED로 남아 있으면 재발행을 건너뜁니다.
+  contentHash String
+  error       String?
+  attemptedAt DateTime @default(now())
+
+  comparisonPageId String
+  comparisonPage   ComparisonPage @relation(fields: [comparisonPageId], references: [id], onDelete: Cascade)
+
+  @@index([comparisonPageId])
+  @@index([contentHash])
+  @@index([attemptedAt])
 }

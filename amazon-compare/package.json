@@ -7,35 +7,41 @@
   },
   "scripts": {
     "dev": "next dev",
-   "build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "build": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "blog:login": "tsx scripts/publish-naver-blog.ts --login",
+    "blog:preview": "tsx scripts/publish-naver-blog.ts --dry-run",
+    "blog:publish": "tsx scripts/publish-naver-blog.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "amazon-creators-api": "^1.1.0",
     "next": "^14.2.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@prisma/client": "^5.18.0",
-    "amazon-creators-api": "^1.1.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.15",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "typescript": "^5.5.4",
-    "tailwindcss": "^3.4.9",
-    "postcss": "^8.4.41",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.6.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.5",
+    "playwright": "^1.63.0",
+    "postcss": "^8.4.41",
     "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.9",
+    "tsx": "^4.23.13",
+    "typescript": "^5.5.4",
     "vitest": "^2.0.5"
   }
 }

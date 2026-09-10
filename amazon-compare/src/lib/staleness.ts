@@ -24,7 +24,8 @@ export function formatRelativeUpdatedAt(
 ): string {
   const fetchedTime = new Date(lastFetchedAt).getTime();
   const diffMs = Math.max(0, now.getTime() - fetchedTime);
-  const diffMinutes = Math.round(diffMs / 60000);
+  // 지난 시간은 내림합니다. 반올림하면 30초 전이 "1 min ago"로 나와 버립니다.
+  const diffMinutes = Math.floor(diffMs / 60000);
 
   if (diffMinutes < 1) return "just now";
   if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`;

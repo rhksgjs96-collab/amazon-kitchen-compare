@@ -1,0 +1,22 @@
+# 의존성 / 빌드 산출물
+node_modules/
+.next/
+out/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# 환경 변수 — .env.example만 커밋합니다
+.env
+.env.local
+.env.*.local
+
+# 네이버 블로그 자동 업로드 작업 폴더
+# session.json에는 네이버 로그인 쿠키가 그대로 들어 있습니다. 절대 커밋하지 마세요.
+.naver-blog/
+
+# Playwright
+playwright-report/
+test-results/
+
+# OS
+.DS_Store

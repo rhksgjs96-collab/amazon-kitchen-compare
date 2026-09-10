@@ -22,7 +22,6 @@ import type { FetchProductsResult, NormalizedProduct } from "./types";
 // SDK의 정확한 named export 형태(클래스명 등)가 버전에 따라 달라질 수 있어
 // 네임스페이스로 통째로 불러온 뒤 방어적으로 꺼내 씁니다.
 // (설치 후 타입 오류가 나면 이 import 한 줄만 SDK 실제 형태에 맞게 조정하세요.)
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import * as AmazonCreatorsSdk from "amazon-creators-api";
 
 const MAX_BATCH_SIZE = 10; // Creators API GetItems 1회 호출당 최대 ASIN 개수
