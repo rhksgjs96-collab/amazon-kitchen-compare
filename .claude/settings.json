@@ -1,0 +1,8 @@
+{
+  "bashOutputMaxChars": 8000,
+  "taskOutputMaxChars": 10000,
+  "skillListingMaxDescChars": 600,
+  "env": {
+    "MAX_MCP_OUTPUT_TOKENS": "10000"
+  }
+}
